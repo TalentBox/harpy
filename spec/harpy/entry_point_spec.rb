@@ -1,13 +1,9 @@
 require "spec_helper"
 
 describe Harpy::EntryPoint do
-  let(:client) { mock("Client") }
   let(:url) { "http://localhost" }
-  subject { Harpy::EntryPoint.new client, url}
+  subject { Harpy::EntryPoint.new url}
 
-  it "should store client" do
-    subject.client.should == client
-  end
   it "should store url" do
     subject.url.should == url
   end
@@ -18,20 +14,20 @@ describe Harpy::EntryPoint do
     let(:success_response) {  Typhoeus::Response.new :code => 200, :body => json_response }
     let(:error_response) {  Typhoeus::Response.new :code => 500 }
     it "gets entry point from url using client" do
-      client.should_receive(:get).with(url).and_return success_response
+      Harpy.client.should_receive(:get).with(url).and_return success_response
       subject.resource_url "user"
     end
     it "return nil if no link for resource_type" do
-      client.should_receive(:get).with(url).and_return success_response
+      Harpy.client.should_receive(:get).with(url).and_return success_response
       subject.resource_url("user").should be_nil
     end
     it "return url for existing resource_type" do
-      client.should_receive(:get).with(url).and_return success_response
+      Harpy.client.should_receive(:get).with(url).and_return success_response
       subject.resource_url("company_url").should be_nil
     end
     it "delegates response code != 200 to client" do
-      client.should_receive(:get).with(url).and_return error_response
-      client.should_receive(:invalid_code).with error_response
+      Harpy.client.should_receive(:get).with(url).and_return error_response
+      Harpy.client.should_receive(:invalid_code).with error_response
       subject.resource_url("company_url")
     end
   end
@@ -43,16 +39,16 @@ describe Harpy::EntryPoint do
     let(:error_response) {  Typhoeus::Response.new :code => 500 }
     let(:not_found_response) {  Typhoeus::Response.new :code => 404 }
     it "query remote for this urn using client" do
-      client.should_receive(:get).with("#{url}/#{urn}").and_return success_response
+      Harpy.client.should_receive(:get).with("#{url}/#{urn}").and_return success_response
       subject.urn(urn).should == company_url
     end
     it "return nil if not found" do
-      client.should_receive(:get).with("#{url}/#{urn}").and_return not_found_response
+      Harpy.client.should_receive(:get).with("#{url}/#{urn}").and_return not_found_response
       subject.urn(urn).should be_nil
     end
     it "delegates response code != 301 or 404 to client" do
-      client.should_receive(:get).with("#{url}/#{urn}").and_return error_response
-      client.should_receive(:invalid_code).with error_response
+      Harpy.client.should_receive(:get).with("#{url}/#{urn}").and_return error_response
+      Harpy.client.should_receive(:invalid_code).with error_response
       subject.urn(urn)
     end
   end

@@ -15,28 +15,12 @@ module Harpy
       base.send :attr_reader, :errors
     end
 
-    def self.client=(new_client)
-      @@client = new_client
-    end
-
-    def self.client
-      @@client ||= Client.new
-    end
-
-    def self.entry_point=(new_entry_point)
-      @@entry_point = new_entry_point
-    end
-
-    def self.entry_point
-      @@entry_point ||= nil
-    end
-
     def self.from_url(hash)
       results = {}
       hash.each do |klass, urls|
-        results[klass] = client.get [*urls]
+        results[klass] = Harpy.client.get [*urls]
       end
-      client.run results.values.flatten
+      Harpy.client.run results.values.flatten
       results.each do |klass, requests|
         requests.collect! do |request|
           klass.send :from_url_handler, request.response
@@ -49,14 +33,14 @@ module Harpy
       def from_url(url)
         case url
         when Array
-          client.run(client.get url).collect{|response| from_url_handler response}
+          Harpy.client.run(client.get url).collect{|response| from_url_handler response}
         else
-          from_url_handler client.get(url)
+          from_url_handler Harpy.client.get url
         end
       end
 
       def from_id(id)
-        url = entry_point.urn urn(id)
+        url = Harpy.entry_point.urn urn(id)
         from_url url if url
       end
 
@@ -73,7 +57,7 @@ module Harpy
         when 404
           nil
         else
-          client.invalid_code response
+          Harpy.client.invalid_code response
         end
       end
     end
