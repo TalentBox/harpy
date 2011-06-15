@@ -1,9 +1,11 @@
 module Harpy
   class Exception < ::Exception; end
   class EntryPointRequired < Exception; end
+  class UrlRequired < Exception; end
   class BodyToBig < Exception; end
   class ClientTimeout < Exception; end
   class ClientError < Exception; end
+  class Unauthorized < Exception; end
   class InvalidResponseCode < Exception; end
 
   autoload :Client, "harpy/client"

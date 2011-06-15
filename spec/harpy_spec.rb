@@ -60,6 +60,12 @@ describe Harpy::EntryPointRequired do
   end
 end
 
+describe Harpy::UrlRequired do
+  it "is an Harpy::Exception" do
+    Harpy::UrlRequired.ancestors.should include Harpy::Exception
+  end
+end
+
 describe Harpy::BodyToBig do
   it "is an Harpy::Exception" do
     Harpy::BodyToBig.ancestors.should include Harpy::Exception
@@ -75,6 +81,12 @@ end
 describe Harpy::ClientError do
   it "is an Harpy::Exception" do
     Harpy::ClientError.ancestors.should include Harpy::Exception
+  end
+end
+
+describe Harpy::Unauthorized do
+  it "is an Harpy::Exception" do
+    Harpy::Unauthorized.ancestors.should include Harpy::Exception
   end
 end
 

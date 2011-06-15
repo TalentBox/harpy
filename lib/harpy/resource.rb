@@ -1,6 +1,7 @@
 require "harpy/client"
 require "active_support"
 require "active_support/core_ext/object/blank"
+require "active_support/core_ext/numeric/bytes"
 require "active_model"
 require "yajl"
 
@@ -12,7 +13,10 @@ module Harpy
       base.extend ActiveModel::Naming
       base.send :include, ActiveModel::Conversion
       base.extend ActiveModel::Translation
-      base.send :attr_reader, :errors
+      base.extend ActiveModel::Callbacks
+      base.send :include, ActiveModel::Validations
+      base.send :include, ActiveModel::Validations::Callbacks
+      base.define_model_callbacks :save, :create, :update, :destroy, :only => [:before, :after]
     end
 
     def self.from_url(hash)
@@ -64,50 +68,39 @@ module Harpy
 
     module InstanceMethods
       def initialize(attrs = {})
-        @persisted = false
         @attrs = attrs
-        @errors = {}
       end
 
       def attributes=(attrs)
         @attrs.merge! attrs
       end
-
-      def save
-        json = @attrs.to_json
-        raise BodyToBig, "Size: #{json.bytesize} bytes (max 1MB)" if json.bytesize > 1.megabyte
-        response = if persisted?
-          self.class.client.put url, :body => json
-        else
-          self.class.client.post url, :body => json
-        end
-
-        case response.code
-        when 200, 201, 302
-          @attrs.merge! Yajl::Parser.parse(response.body)
-          on_create
-          true
-        when 204
-          true
-        when 401
-          false
-        when 422
-          @errors = Yajl::Parser.parse(response.body)["errors"]
-          false
-        else
-          self.class.client.invalid_code response
-        end
+      
+      def as_json
+        hash = @attrs.dup
+        hash.delete "link"
+        hash.delete "urn"
+        hash
       end
 
-      def on_create
+      def save
+        if valid?
+          _run_save_callbacks do
+            json = Yajl::Encoder.encode as_json
+            raise BodyToBig, "Size: #{json.bytesize} bytes (max 1MB)" if json.bytesize > 1.megabyte
+            persisted? ? update(json) : create(json)
+          end
+        else
+          false
+        end
+      end
+      
+      def link(rel)
+        link = (@attrs["link"]||[]).detect{|l| l["rel"]==rel.to_s}
+        link["href"] if link
       end
 
       def url
-        if link = (@attrs["link"] || []).detect{|l| l["rel"] == "self"}
-          link["href"]
-        else
-          url_collection
-        end
+        link "self"
       end
 
       def url_collection
@@ -123,12 +116,7 @@ module Harpy
       end
 
       def inspect
-        "<#{self.class.name} @attrs:#{@attrs.inspect} @errors:#{@errors.inspect} persisted:#{@persisted}>"
-      end
-
-      def link(rel)
-        link = (@attrs["link"]||[]).detect{|l| l["rel"]==rel.to_s}
-        link["href"] if link
+        "<#{self.class.name} @attrs:#{@attrs.inspect} @errors:#{errors.inspect} persisted:#{persisted?}>"
       end
 
       def has_key?(key)
@@ -136,6 +124,38 @@ module Harpy
       end
 
     private
+
+      def create(json)
+        _run_create_callbacks do
+          process_response Harpy.client.post(url_collection, :body => json), :create
+        end
+      end
+
+      def update(json)
+        _run_update_callbacks do
+          raise Harpy::UrlRequired unless url
+          process_response Harpy.client.put(url, :body => json), :update
+        end
+      end
+
+      def process_response(response, context)
+        case response.code
+        when 200, 201, 302
+          @attrs.merge! Yajl::Parser.parse(response.body)
+          true
+        when 204
+          context==:create ? Harpy.client.invalid_code(response) : true
+        when 401
+          raise Harpy::Unauthorized, "Server returned a 401 response code"
+        when 422
+          Yajl::Parser.parse(response.body)["errors"].each do |attr, attr_errors|
+            attr_errors.each{|attr_error| errors[attr] = attr_error }
+          end
+          false
+        else
+          Harpy.client.invalid_code response
+        end
+      end
 
       def method_missing(method, *args)
         if persisted? && !@attrs.has_key?(method.to_s)
