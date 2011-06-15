@@ -233,8 +233,13 @@ describe "class including Harpy::Resource" do
       end
     end
     describe "#inspect" do
+      subject { Harpy::Spec::Company.new "firstname" => "Anthony" }
       it "shows class name, attributes, errors and persisted state" do
-        subject.inspect.should == '<Harpy::Spec::Company @attrs:{"link"=>[{"rel"=>"self", "href"=>"http://localhost/company/1"}]} @errors:{} persisted:false>'
+        if RUBY_VERSION.to_f < 1.9
+          subject.inspect.should == '<Harpy::Spec::Company @attrs:{"firstname"=>"Anthony"} @errors:#<OrderedHash {}> persisted:false>'
+        else
+          subject.inspect.should == '<Harpy::Spec::Company @attrs:{"firstname"=>"Anthony"} @errors:{} persisted:false>'
+        end
       end
     end
     describe "#has_key?(key)" do

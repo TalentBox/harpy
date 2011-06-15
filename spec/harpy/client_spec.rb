@@ -21,7 +21,7 @@ describe Harpy::Client do
           @expected = Typhoeus::Response.new :code => 200
           Typhoeus::Hydra.hydra.stub(method, entry_url).and_return(@expected)
         end
-        it "sends a #{method.upcase} to the url" do
+        it "sends a #{method.to_s.upcase} to the url" do
           subject.send(method, entry_url).should == @expected
         end
         it "merges options" do
