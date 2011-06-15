@@ -131,6 +131,72 @@ describe "class including Harpy::Resource" do
       }.should raise_error NotImplementedError
     end
   end
+  describe ".resource_name" do
+    it "defaults to underscored class name" do
+      Harpy::Spec::Company.resource_name.should == "harpy/spec/company"
+    end
+  end
+  describe ".search(conditions)" do
+    let(:url){ "http://localhost/company" }
+    before do
+       Harpy.entry_point = mock
+       Harpy.entry_point.should_receive(:resource_url).with("harpy/spec/company").and_return url
+    end
+    it "return properly filled instances on 200" do
+      response = Typhoeus::Response.new :code => 200, :body => <<-eos
+      {
+        "harpy/spec/company": [
+          {
+            "firstname": "Anthony",
+            "urn": "urn:harpy:company:1",
+            "link": [
+              {"rel": "self", "href": "#{url}/1"}
+            ]
+          }
+        ],
+        "link": [
+          {"rel": "self", "href": "#{url}"}
+        ]
+      }
+      eos
+      Harpy.client.should_receive(:get).with(url, :params => {"firstname" => "Anthony"}).and_return response
+      companies = Harpy::Spec::Company.search "firstname" => "Anthony"
+      companies.should have(1).item
+      companies.first.should be_kind_of Harpy::Spec::Company
+      companies.first.firstname.should == "Anthony"
+      companies.first.id.should == "1"
+    end
+    it "delegates other response codes to client" do
+      response = Typhoeus::Response.new :code => 500
+      Harpy.client.should_receive(:get).with(url, :params => {}).and_return response
+      Harpy.client.should_receive(:invalid_code).with response
+      Harpy::Spec::Company.search
+    end
+  end
+  describe ".with_url(url)" do
+    let(:url){ "http://localhost/user/1/company" }
+    it "overrides url used for searches" do
+      response = Typhoeus::Response.new :code => 500
+      Harpy.client.should_receive(:get).with(url, :params => {}).and_return response
+      Harpy.client.should_receive(:invalid_code).with response
+      Harpy::Spec::Company.with_url(url) do
+        Harpy::Spec::Company.search
+      end
+    end
+    it "can be nested" do
+      url2 = "http://localhost/user/2/company"
+      response = Typhoeus::Response.new :code => 500
+      Harpy.client.should_receive(:get).ordered.with(url2, :params => {}).and_return response
+      Harpy.client.should_receive(:get).ordered.with(url, :params => {}).and_return response
+      Harpy.client.should_receive(:invalid_code).twice.with response
+      Harpy::Spec::Company.with_url(url) do
+        Harpy::Spec::Company.with_url(url2) do
+          Harpy::Spec::Company.search
+        end
+        Harpy::Spec::Company.search
+      end
+    end
+  end
   describe "mass assignment" do
     it "sets any attribute on initialization" do
       company = Harpy::Spec::Company.new "name" => "Harpy Ltd"
@@ -189,8 +255,10 @@ describe "class including Harpy::Resource" do
       end
     end
     describe "#url_collection" do
-      it "raises NotImplementedError" do
-        lambda{ subject.url_collection }.should raise_error NotImplementedError
+      it "defaults to entry_point link which rel matches resource name" do
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:resource_url).with("harpy/spec/company").and_return (expected = mock)
+        subject.url_collection.should be expected
       end
     end
     describe "#id" do
@@ -304,11 +372,7 @@ describe "class including Harpy::Resource" do
       subject.save.should be_false
       subject.callbacks.should =~ []
     end
-    it "raises NotImplementedError if valid, not persisted and url_collection has not been overridden" do
-      subject.should_receive(:valid?).and_return true
-      lambda{ subject.save }.should raise_error NotImplementedError
-    end
-    context "on create (valid, not persisted and url_collection has been set)" do
+    context "on create (valid, not persisted)" do
       let(:url) { "http://localhost/user" }
       let(:body) { '{"company_name":"Stark Enterprises"}' }
       before do

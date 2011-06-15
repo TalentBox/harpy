@@ -52,7 +52,35 @@ module Harpy
         raise NotImplementedError
       end
 
+      def resource_name
+        name.underscore
+      end
+
+      def search(conditions={})
+        response = Harpy.client.get url, :params => conditions
+        case response.code
+        when 200
+          parsed = Yajl::Parser.parse response.body
+          parsed[resource_name].collect{|model| new model}
+        else
+          Harpy.client.invalid_code response
+        end
+      end
+
+      def with_url(url)
+        raise ArgumentError unless block_given?
+        key = "#{resource_name}_url"
+        old, Thread.current[key] = Thread.current[key], url
+        result = yield
+        Thread.current[key] = old
+        result
+      end
+
     private
+
+      def url
+        Thread.current["#{resource_name}_url"] || Harpy.entry_point.resource_url(resource_name)
+      end
 
       def from_url_handler(response)
         case response.code
@@ -104,7 +132,7 @@ module Harpy
       end
 
       def url_collection
-        raise NotImplementedError
+        Harpy.entry_point.resource_url self.class.resource_name
       end
 
       def id
