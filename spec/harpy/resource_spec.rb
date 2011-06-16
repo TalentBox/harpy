@@ -80,6 +80,38 @@ describe "class including Harpy::Resource" do
         Harpy::Spec::Company.from_url(url)
       end
     end
+    context "called with multiple urls" do
+      let(:url1){ "http://localhost/company/1" }
+      let(:url2){ "http://localhost/company/2" }
+      it "is a properly filled-in instance of Harpy::Spec::Company on success" do
+        response1 = Typhoeus::Response.new :code => 200, :body => <<-eos
+          {
+            "name": "Harpy Ltd",
+            "link": [
+              {"rel": "self", "href": "#{url1}"}
+            ]
+          }
+        eos
+        response2 = Typhoeus::Response.new :code => 200, :body => <<-eos
+          {
+            "name": "Harpy Inc",
+            "link": [
+              {"rel": "self", "href": "#{url2}"}
+            ]
+          }
+        eos
+        Typhoeus::Hydra.hydra.stub(:get, url1).and_return response1
+        Typhoeus::Hydra.hydra.stub(:get, url2).and_return response2
+        results = Harpy::Spec::Company.from_url [url1, url2]
+        results.should have(2).items
+        results[0].should be_kind_of Harpy::Spec::Company
+        results[0].name.should == "Harpy Ltd"
+        results[0].link("self").should == url1
+        results[1].should be_kind_of Harpy::Spec::Company
+        results[1].name.should == "Harpy Inc"
+        results[1].link("self").should == url2
+      end
+    end
   end
   describe ".from_id(id)" do
     context "when entry point is configured" do

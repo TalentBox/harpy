@@ -37,7 +37,7 @@ module Harpy
       def from_url(url)
         case url
         when Array
-          Harpy.client.run(client.get url).collect{|response| from_url_handler response}
+          Harpy.client.run(Harpy.client.get url).collect{|response| from_url_handler response}
         else
           from_url_handler Harpy.client.get url
         end
