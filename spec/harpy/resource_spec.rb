@@ -27,6 +27,7 @@ module Harpy
       before_save :callback_before_save
       before_create :callback_before_create
       before_update :callback_before_update
+      before_destroy :callback_before_destroy
       attr_reader :callbacks
       def initialize(*args)
         @callbacks = []
@@ -43,6 +44,9 @@ module Harpy
       end
       def callback_before_update
         @callbacks << :update
+      end
+      def callback_before_destroy
+        @callbacks << :destroy
       end
     end
   end
@@ -542,6 +546,80 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:invalid_code).with(response)
         subject.save
         subject.callbacks.should =~ [:save, :update]
+      end
+    end
+  end
+  describe "#destroy" do
+    subject{ Harpy::Spec::User.new "company_name" => "Stark Enterprises" }
+    context "when link to self is missing" do
+      it "raises Harpy::UrlRequired" do
+        lambda{ subject.destroy }.should raise_error Harpy::UrlRequired
+        subject.callbacks.should =~ []
+      end
+    end
+    context "when link to self is present" do
+      let(:url) { "http://localhost/user/1" }
+      subject do
+        Harpy::Spec::User.new({
+          "urn" => "urn:harpy:user:1", 
+          "company_name" => "Stark Enterprises", 
+          "link" => [{"rel" => "self", "href" => url}],
+        })
+      end
+      [200, 201, 302].each do |response_code|
+        it "is true and merges response attributes on #{response_code}" do
+          response = Typhoeus::Response.new :code => response_code, :body => <<-eos
+            {
+              "firstname": "Anthony",
+              "urn": "urn:harpy:user:1",
+              "link": [
+                {"rel": "self", "href": "#{url}/1"}
+              ]
+            }
+          eos
+          Harpy.client.should_receive(:delete).with(url).and_return response
+          subject.destroy.should be_true
+          subject.callbacks.should =~ [:destroy]
+          subject.firstname.should == "Anthony"
+          subject.company_name.should == "Stark Enterprises"
+        end
+      end
+      it "is true but doesn't touch attributes on 204" do
+        response = Typhoeus::Response.new :code => 204
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        subject.destroy.should be_true
+        subject.callbacks.should =~ [:destroy]
+        subject.company_name.should == "Stark Enterprises"
+      end
+      it "raises Harpy::Unauthorized on 401" do
+        response = Typhoeus::Response.new :code => 401
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        lambda { subject.destroy }.should raise_error Harpy::Unauthorized, "Server returned a 401 response code"
+        subject.callbacks.should =~ [:destroy]
+      end
+      it "is false and fills in errors on 422" do
+        response = Typhoeus::Response.new :code => 422, :body => <<-eos
+          {
+            "firstname": "Anthony",
+            "errors": {
+              "lastname": ["can't be blank", "must be unique"]
+            }
+          }
+        eos
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        subject.destroy.should be_false
+        subject.callbacks.should =~ [:destroy]
+        subject.should have(1).error
+        subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
+        lambda { subject.firstname }.should raise_error NoMethodError
+        subject.company_name.should == "Stark Enterprises"
+      end
+      it "delegates other response codes to client" do
+        response = Typhoeus::Response.new :code => 500
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        Harpy.client.should_receive(:invalid_code).with(response)
+        subject.destroy
+        subject.callbacks.should =~ [:destroy]
       end
     end
   end

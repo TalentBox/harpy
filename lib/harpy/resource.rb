@@ -122,6 +122,13 @@ module Harpy
         end
       end
       
+      def destroy
+        raise Harpy::UrlRequired unless url
+        _run_destroy_callbacks do
+          process_response Harpy.client.delete(url), :destroy
+        end
+      end
+      
       def link(rel)
         link = (@attrs["link"]||[]).detect{|l| l["rel"]==rel.to_s}
         link["href"] if link
@@ -184,7 +191,7 @@ module Harpy
           Harpy.client.invalid_code response
         end
       end
-
+      
       def method_missing(method, *args)
         if persisted? && !@attrs.has_key?(method.to_s)
           super
