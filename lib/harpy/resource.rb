@@ -103,7 +103,7 @@ module Harpy
         @attrs.merge! attrs
       end
       
-      def as_json
+      def as_json(*args)
         hash = @attrs.dup
         hash.delete "link"
         hash.delete "urn"
