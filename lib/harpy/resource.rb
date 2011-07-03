@@ -95,8 +95,8 @@ module Harpy
     end
 
     module InstanceMethods
-      def initialize(attrs = {})
-        @attrs = attrs
+      def initialize(attrs = nil)
+        @attrs = attrs || {}
       end
 
       def attributes=(attrs)
