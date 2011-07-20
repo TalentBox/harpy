@@ -191,12 +191,15 @@ module Harpy
           Harpy.client.invalid_code response
         end
       end
-      
+
       def method_missing(method, *args)
-        if persisted? && !@attrs.has_key?(method.to_s)
+        key = method.to_s
+        if persisted? && !@attrs.has_key?(key)
+          super
+        elsif key=~/[\]=]\z/
           super
         else
-          @attrs[method.to_s]
+          @attrs[key]
         end
       end
     end

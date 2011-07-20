@@ -256,7 +256,8 @@ describe "class including Harpy::Resource" do
     end
     it "doesn't define writers for each attribute" do
       company = Harpy::Spec::Company.new "name" => "Harpy Ltd"
-      company.should_not respond_to(:name=)
+      lambda{ company.name = "test" }.should raise_error NoMethodError
+      lambda{ company[1] }.should raise_error NoMethodError
     end
     it "allows accessing undefined attributes when not persisted" do
       subject.name.should be_nil
