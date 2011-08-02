@@ -117,20 +117,52 @@ describe "class including Harpy::Resource" do
       end
     end
   end
-  describe ".from_id(id)" do
-    context "when entry point is configured" do
+  describe ".from_urn(urn)" do
+    context "when entry point is not set" do
       it "raises Harpy::EntryPointRequired" do
         lambda{
-          Harpy::Spec::Company.from_id(1)
+          Harpy::Spec::Company.from_urn("urn:harpy:company:1")
         }.should raise_error Harpy::EntryPointRequired
       end
     end
-    context "when entry point is set but urn has not been overriden" do
+    context "when entry point is set" do
+      let(:urn) { "urn:harpy:company:1" }
+      let(:url) { "http://localhost/company/1" }
+      it "asks Harpy.entry_point to convert urn to url then call .from_url" do
+        # urn:harpy:company:1 -> http://localhost/company/1
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:urn).with(urn).and_return url
+
+        # http://localhost/company/1 -> Harpy::Spec::Company instance
+        Harpy::Spec::Company.should_receive(:from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.from_urn(urn).should be expected
+      end
+      it "is nil if urn is not found" do
+        # urn:harpy:company:1 -> nil
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:urn).with(urn)
+        
+        Harpy::Spec::Company.from_urn(urn).should be_nil
+      end
+    end
+  end
+  describe ".from_id(id)" do
+    context "when urn has not been overriden" do
       it "raises NotImplementedError" do
-        Harpy.entry_point_url = "http://localhost"
         lambda{
           Harpy::Spec::Company.from_id(1)
         }.should raise_error NotImplementedError
+      end
+    end
+    context "when urn has been overriden but entry point is not set" do
+      let(:urn) { "urn:harpy:company:1" }
+      it "raises Harpy::EntryPointRequired" do
+        # 1 -> urn:harpy:company:1
+        Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
+        
+        lambda{
+          Harpy::Spec::Company.from_id(1)
+        }.should raise_error Harpy::EntryPointRequired
       end
     end
     context "when entry point is set and urn has been overriden" do

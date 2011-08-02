@@ -43,9 +43,13 @@ module Harpy
         end
       end
 
-      def from_id(id)
-        url = Harpy.entry_point.urn urn(id)
+      def from_urn(urn)
+        url = Harpy.entry_point.urn urn
         from_url url if url
+      end
+
+      def from_id(id)
+        from_urn urn id
       end
 
       def urn(id)
