@@ -191,6 +191,103 @@ describe "class including Harpy::Resource" do
         Harpy::Spec::Company.from_id(1).should be_nil
       end
     end
+  end  
+  describe ".delete_from_url(url)" do
+    context "called with only one url" do
+      let(:url){ "http://localhost/company/1" }
+      it "is true on success" do
+        response = Typhoeus::Response.new :code => 204
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        result = Harpy::Spec::Company.delete_from_url url
+        result.should be_true
+      end
+      it "is false when not found" do
+        response = Typhoeus::Response.new :code => 404
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        Harpy::Spec::Company.delete_from_url(url).should be_false
+      end
+      it "delegates response code != 204 or 404 to client" do
+        response = Typhoeus::Response.new :code => 500
+        Harpy.client.should_receive(:delete).with(url).and_return response
+        Harpy.client.should_receive(:invalid_code).with response
+        Harpy::Spec::Company.delete_from_url url
+      end
+    end
+  end
+  describe ".delete_from_urn(urn)" do
+    context "when entry point is not set" do
+      it "raises Harpy::EntryPointRequired" do
+        lambda{
+          Harpy::Spec::Company.delete_from_urn("urn:harpy:company:1")
+        }.should raise_error Harpy::EntryPointRequired
+      end
+    end
+    context "when entry point is set" do
+      let(:urn) { "urn:harpy:company:1" }
+      let(:url) { "http://localhost/company/1" }
+      it "asks Harpy.entry_point to convert urn to url then call .from_url" do
+        # urn:harpy:company:1 -> http://localhost/company/1
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:urn).with(urn).and_return url
+
+        # http://localhost/company/1 -> Harpy::Spec::Company instance
+        Harpy::Spec::Company.should_receive(:delete_from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.delete_from_urn(urn).should be expected
+      end
+      it "is nil if urn is not found" do
+        # urn:harpy:company:1 -> nil
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:urn).with(urn)
+
+        Harpy::Spec::Company.delete_from_urn(urn).should be_false
+      end
+    end
+  end
+  describe ".delete_from_id(id)" do
+    context "when urn has not been overriden" do
+      it "raises NotImplementedError" do
+        lambda{
+          Harpy::Spec::Company.delete_from_id(1)
+        }.should raise_error NotImplementedError
+      end
+    end
+    context "when urn has been overriden but entry point is not set" do
+      let(:urn) { "urn:harpy:company:1" }
+      it "raises Harpy::EntryPointRequired" do
+        # 1 -> urn:harpy:company:1
+        Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
+        
+        lambda{
+          Harpy::Spec::Company.delete_from_id(1)
+        }.should raise_error Harpy::EntryPointRequired
+      end
+    end
+    context "when entry point is set and urn has been overriden" do
+      let(:urn) { "urn:harpy:company:1" }
+      let(:url) { "http://localhost/company/1" }
+      it "asks Harpy.entry_point to convert urn to url then call .from_url" do
+        # 1 -> urn:harpy:company:1
+        Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
+        
+        # urn:harpy:company:1 -> http://localhost/company/1
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:urn).with(urn).and_return url
+        
+        # http://localhost/company/1 -> Harpy::Spec::Company instance
+        Harpy::Spec::Company.should_receive(:delete_from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.delete_from_id(1).should be expected
+      end
+      it "is nil if urn is not found" do
+        # 1 -> urn:harpy:company:1
+        Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
+        
+        # urn:harpy:company:1 -> nil
+        Harpy.entry_point = mock
+        Harpy.entry_point.should_receive(:urn).with(urn)
+        
+        Harpy::Spec::Company.delete_from_id(1).should be_false
+      end
+    end
   end
   describe ".urn(id)" do
     it "raises NotImplementedError" do

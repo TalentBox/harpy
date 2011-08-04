@@ -80,6 +80,19 @@ module Harpy
         result
       end
 
+      def delete_from_url(url)
+        delete_from_url_handler Harpy.client.delete url
+      end
+
+      def delete_from_urn(urn)
+        url = Harpy.entry_point.urn urn
+        url ? delete_from_url(url) : false
+      end
+
+      def delete_from_id(id)
+        delete_from_urn urn id
+      end
+
     private
 
       def url
@@ -92,6 +105,17 @@ module Harpy
           new Yajl::Parser.parse response.body
         when 404
           nil
+        else
+          Harpy.client.invalid_code response
+        end
+      end
+
+      def delete_from_url_handler(response)
+        case response.code
+        when 204
+          true
+        when 404
+          false
         else
           Harpy.client.invalid_code response
         end
