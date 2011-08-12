@@ -159,8 +159,10 @@ Usage
         })
         # => {FirstModel => [...], SecondModel => [...]}
 
-About
------
+Build Status
+---------
+
+[![Build Status](http://travis-ci.org/TalentBox/harpy.png)](http://travis-ci.org/TalentBox/harpy)
 
 License
 -------
