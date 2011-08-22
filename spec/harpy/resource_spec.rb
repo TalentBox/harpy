@@ -327,7 +327,8 @@ describe "class including Harpy::Resource" do
       Harpy.client.should_receive(:get).with(url, :params => {"firstname" => "Anthony"}).and_return response
       companies = Harpy::Spec::Company.search "firstname" => "Anthony"
       companies.should be_kind_of Harpy::Collection
-      companies.size.should == 1
+      companies.should have(1).item
+      companies.should have(1).items
       companies.first.should be_kind_of Harpy::Spec::Company
       companies.first.firstname.should == "Anthony"
       companies.first.id.should == "1"
