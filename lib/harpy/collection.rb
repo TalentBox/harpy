@@ -12,9 +12,9 @@ module Harpy
     end
     alias_method :item, :items
   private
-    def method_missing(method, *args)
+    def method_missing(method, *args, &blk)
       if items.respond_to? method
-        items.send method, *args
+        items.send method, *args, &blk
       else
         super
       end

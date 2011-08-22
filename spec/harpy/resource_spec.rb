@@ -337,6 +337,7 @@ describe "class including Harpy::Resource" do
         company.firstname.should == "Anthony"
       end
       companies.to_a.should == [companies.first]
+      companies.detect{ true }.should be companies.first
     end
     it "delegates other response codes to client" do
       response = Typhoeus::Response.new :code => 500
