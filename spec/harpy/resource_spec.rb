@@ -333,6 +333,10 @@ describe "class including Harpy::Resource" do
       companies.first.firstname.should == "Anthony"
       companies.first.id.should == "1"
       companies.url.should == url
+      companies.each do |company|
+        company.firstname.should == "Anthony"
+      end
+      companies.to_a.should == [companies.first]
     end
     it "delegates other response codes to client" do
       response = Typhoeus::Response.new :code => 500
