@@ -10,6 +10,10 @@ module Harpy
     def persisted?
       true
     end
+    def each(&blk)
+      items.each(&blk)
+      self
+    end
     alias_method :item, :items
   private
     def method_missing(method, *args, &blk)

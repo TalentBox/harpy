@@ -335,7 +335,7 @@ describe "class including Harpy::Resource" do
       companies.url.should == url
       companies.each do |company|
         company.firstname.should == "Anthony"
-      end
+      end.should be_kind_of Harpy::Collection
       companies.to_a.should == [companies.first]
       companies.detect{ true }.should be companies.first
     end
