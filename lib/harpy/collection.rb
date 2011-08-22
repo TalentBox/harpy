@@ -10,15 +10,14 @@ module Harpy
     def persisted?
       true
     end
-    def each(&blk)
-      items.each(&blk)
-      self
-    end
     alias_method :item, :items
+    alias_method :to_a, :items
+    alias_method :to_ary, :items
   private
     def method_missing(method, *args, &blk)
       if items.respond_to? method
-        items.send method, *args, &blk
+        result = items.send method, *args, &blk
+        result===items ? self : result
       else
         super
       end
