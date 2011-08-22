@@ -10,6 +10,7 @@ module Harpy
     def persisted?
       true
     end
+    undef :blank?
     alias_method :item, :items
     alias_method :to_a, :items
     alias_method :to_ary, :items

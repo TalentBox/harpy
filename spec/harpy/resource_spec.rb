@@ -339,6 +339,11 @@ describe "class including Harpy::Resource" do
       companies.each.should be_kind_of Enumerator
       companies.to_a.should == [companies.first]
       companies.detect{ true }.should be companies.first
+      companies.should be_present
+      companies.should_not be_blank
+      companies.replace []
+      companies.should_not be_present
+      companies.should be_blank
     end
     it "delegates other response codes to client" do
       response = Typhoeus::Response.new :code => 500
