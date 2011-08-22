@@ -1,4 +1,3 @@
-require "harpy/client"
 require "active_support"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/numeric/bytes"
@@ -65,7 +64,8 @@ module Harpy
         case response.code
         when 200
           parsed = Yajl::Parser.parse response.body
-          parsed[resource_name].collect{|model| new model}
+          items = parsed[resource_name].collect{|model| new model}
+          Harpy::Collection.new parsed.merge(items: items)
         else
           Harpy.client.invalid_code response
         end

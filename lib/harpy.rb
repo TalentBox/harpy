@@ -9,6 +9,7 @@ module Harpy
   class InvalidResponseCode < Exception; end
 
   autoload :Client, "harpy/client"
+  autoload :Collection, "harpy/collection"
   autoload :EntryPoint, "harpy/entry_point"
   autoload :Resource, "harpy/resource"
   autoload :BodyToBig, "harpy/resource"

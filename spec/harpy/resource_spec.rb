@@ -326,10 +326,12 @@ describe "class including Harpy::Resource" do
       eos
       Harpy.client.should_receive(:get).with(url, :params => {"firstname" => "Anthony"}).and_return response
       companies = Harpy::Spec::Company.search "firstname" => "Anthony"
-      companies.should have(1).item
+      companies.should be_kind_of Harpy::Collection
+      companies.size.should == 1
       companies.first.should be_kind_of Harpy::Spec::Company
       companies.first.firstname.should == "Anthony"
       companies.first.id.should == "1"
+      companies.url.should == url
     end
     it "delegates other response codes to client" do
       response = Typhoeus::Response.new :code => 500
