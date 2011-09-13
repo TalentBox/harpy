@@ -336,7 +336,7 @@ describe "class including Harpy::Resource" do
       companies.each do |company|
         company.firstname.should == "Anthony"
       end.should be_kind_of Harpy::Collection
-      companies.each.should be_kind_of Enumerator
+      companies.each.should be_kind_of(defined?(Enumerator) ? Enumerator : Enumerable::Enumerator)
       companies.to_a.should == [companies.first]
       companies.detect{ true }.should be companies.first
       companies.should be_present
@@ -598,7 +598,7 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:post).with(url, :body => body).and_return response
         subject.save.should be_false
         subject.callbacks.should =~ [:save, :create]
-        subject.should have(2).errors
+        subject.should have(1).error
         subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
         subject.firstname.should be_nil
         subject.company_name.should == "Stark Enterprises"
@@ -675,7 +675,7 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:put).with(url, :body => body).and_return response
         subject.save.should be_false
         subject.callbacks.should =~ [:save, :update]
-        subject.should have(2).errors
+        subject.should have(1).error
         subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
         lambda { subject.firstname }.should raise_error NoMethodError
         subject.company_name.should == "Stark Enterprises"
@@ -749,7 +749,7 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:delete).with(url).and_return response
         subject.destroy.should be_false
         subject.callbacks.should =~ [:destroy]
-        subject.should have(2).errors
+        subject.should have(1).error
         subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
         lambda { subject.firstname }.should raise_error NoMethodError
         subject.company_name.should == "Stark Enterprises"
