@@ -65,7 +65,7 @@ module Harpy
         when 200
           parsed = Yajl::Parser.parse response.body
           items = parsed[resource_name].collect{|model| new model}
-          Harpy::Collection.new parsed.merge(items: items)
+          Harpy::Collection.new parsed.merge(:items => items)
         else
           Harpy.client.invalid_code response
         end
