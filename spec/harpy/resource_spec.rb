@@ -483,11 +483,7 @@ describe "class including Harpy::Resource" do
     describe "#inspect" do
       subject { Harpy::Spec::Company.new "firstname" => "Anthony" }
       it "shows class name, attributes, errors and persisted state" do
-        if RUBY_VERSION.to_f < 1.9
-          subject.inspect.should == '<Harpy::Spec::Company @attrs:{"firstname"=>"Anthony"} @errors:#<OrderedHash {}> persisted:false>'
-        else
-          subject.inspect.should == '<Harpy::Spec::Company @attrs:{"firstname"=>"Anthony"} @errors:{} persisted:false>'
-        end
+        subject.inspect.should == '<Harpy::Spec::Company @attrs:{"firstname"=>"Anthony"} @errors:[] persisted:false>'
       end
     end
     describe "#has_key?(key)" do
@@ -602,7 +598,7 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:post).with(url, :body => body).and_return response
         subject.save.should be_false
         subject.callbacks.should =~ [:save, :create]
-        subject.should have(1).error
+        subject.should have(2).errors
         subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
         subject.firstname.should be_nil
         subject.company_name.should == "Stark Enterprises"
@@ -679,7 +675,7 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:put).with(url, :body => body).and_return response
         subject.save.should be_false
         subject.callbacks.should =~ [:save, :update]
-        subject.should have(1).error
+        subject.should have(2).errors
         subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
         lambda { subject.firstname }.should raise_error NoMethodError
         subject.company_name.should == "Stark Enterprises"
@@ -753,7 +749,7 @@ describe "class including Harpy::Resource" do
         Harpy.client.should_receive(:delete).with(url).and_return response
         subject.destroy.should be_false
         subject.callbacks.should =~ [:destroy]
-        subject.should have(1).error
+        subject.should have(2).errors
         subject.errors[:lastname].should =~ ["can't be blank", "must be unique"]
         lambda { subject.firstname }.should raise_error NoMethodError
         subject.company_name.should == "Stark Enterprises"
@@ -765,6 +761,28 @@ describe "class including Harpy::Resource" do
         subject.destroy
         subject.callbacks.should =~ [:destroy]
       end
+    end
+  end
+  describe "equality" do
+    it "is equal to itself even without urn" do
+      company1 = Harpy::Spec::Company.new
+      company2 = company1
+      company1.should == company2
+    end
+    it "two instances without urn are not equal" do
+      company1 = Harpy::Spec::Company.new
+      company2 = Harpy::Spec::Company.new
+      company1.should_not == company2
+    end
+    it "two instances of the same class with the same urn are equal" do
+      company1 = Harpy::Spec::Company.new "urn" => "urn:harpy:company:1"
+      company2 = Harpy::Spec::Company.new "urn" => "urn:harpy:company:1"
+      company1.should == company2
+    end
+    it "two instances of the same class with different urns are not equal" do
+      company1 = Harpy::Spec::Company.new "urn" => "urn:harpy:company:1"
+      company2 = Harpy::Spec::Company.new "urn" => "urn:harpy:company:2"
+      company1.should_not == company2
     end
   end
 end

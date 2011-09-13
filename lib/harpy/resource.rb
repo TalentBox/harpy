@@ -179,12 +179,21 @@ module Harpy
       end
 
       def inspect
-        "<#{self.class.name} @attrs:#{@attrs.inspect} @errors:#{errors.inspect} persisted:#{persisted?}>"
+        "<#{self.class.name} @attrs:#{@attrs.inspect} @errors:#{errors.full_messages.inspect} persisted:#{persisted?}>"
       end
 
       def has_key?(key)
         @attrs.has_key? key.to_s
       end
+
+      def hash
+        urn.hash
+      end
+      
+      def ==(other)
+        other.equal?(self) || (urn && other.instance_of?(self.class) && other.urn == urn)
+      end
+      alias_method :eql?, :==
 
     private
 
