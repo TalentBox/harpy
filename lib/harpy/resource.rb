@@ -124,11 +124,18 @@ module Harpy
 
     module InstanceMethods
       def initialize(attrs = nil)
-        @attrs = attrs || {}
+        @attrs = {}
+        self.attributes = attrs || {}
       end
 
       def attributes=(attrs)
-        @attrs.merge! attrs
+        attrs.each do |key, value|
+          if respond_to? "#{key}="
+            send "#{key}=", value
+          else
+            @attrs[key] = value
+          end
+        end
       end
       
       def as_json(*args)

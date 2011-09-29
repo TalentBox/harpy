@@ -19,6 +19,7 @@ module Harpy
   module Spec
     class Company
       include Harpy::Resource
+      attr_accessor :tax_id
     end
     class User
       include Harpy::Resource
@@ -408,6 +409,14 @@ describe "class including Harpy::Resource" do
     it "doesn't allows accessing undefined attributes when not persisted" do
       subject.should_receive(:persisted?).and_return true
       lambda{ subject.name }.should raise_error NoMethodError
+    end
+    it "use existing setters if available" do
+      company = Harpy::Spec::Company.new "tax_id" => "123"
+      company.tax_id.should == "123"
+      company.as_json.should == {}
+      company.attributes = {:tax_id => 123}
+      company.tax_id.should == 123
+      company.as_json.should == {}
     end
   end
   describe "advanced attribute readers" do
