@@ -17,8 +17,7 @@ module Harpy
   private
     def method_missing(method, *args, &blk)
       if items.respond_to? method
-        result = items.send method, *args, &blk
-        result===items ? self : result
+        items.send method, *args, &blk
       else
         super
       end
