@@ -1,7 +1,7 @@
 Harpy
 ======
 
-[![Build Status](http://travis-ci.org/TalentBox/harpy.png)](http://travis-ci.org/TalentBox/harpy)
+[![Build Status](https://travis-ci.org/TalentBox/harpy.png?branch=master)](https://travis-ci.org/TalentBox/harpy)
 [![Code Climate](https://codeclimate.com/github/TalentBox/harpy.png)](https://codeclimate.com/github/TalentBox/harpy)
 
 Client for REST API with HATEOAS
