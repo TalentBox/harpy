@@ -136,7 +136,7 @@ module Harpy
         end
       end
     end
-    
+
     def as_json(*args)
       hash = @attrs.dup
       hash.delete "link"
@@ -146,7 +146,7 @@ module Harpy
 
     def save
       if valid?
-        _run_save_callbacks do
+        run_callbacks :save do
           json = Yajl::Encoder.encode as_json
           raise BodyToBig, "Size: #{json.bytesize} bytes (max 1MB)" if json.bytesize > 1.megabyte
           persisted? ? update(json) : create(json)
@@ -155,14 +155,14 @@ module Harpy
         false
       end
     end
-    
+
     def destroy
       raise Harpy::UrlRequired unless url
-      _run_destroy_callbacks do
+      run_callbacks :destroy do
         process_response Harpy.client.delete(url), :destroy
       end
     end
-    
+
     def link(rel)
       link = (@attrs["link"]||[]).detect{|l| l["rel"]==rel.to_s}
       link["href"] if link
@@ -195,7 +195,7 @@ module Harpy
     def hash
       urn.hash
     end
-    
+
     def ==(other)
       other.equal?(self) || (urn && other.instance_of?(self.class) && other.urn == urn)
     end
@@ -204,13 +204,13 @@ module Harpy
   private
 
     def create(json)
-      _run_create_callbacks do
+      run_callbacks :create do
         process_response Harpy.client.post(url_collection, :body => json), :create
       end
     end
 
     def update(json)
-      _run_update_callbacks do
+      run_callbacks :update do
         raise Harpy::UrlRequired unless url
         process_response Harpy.client.put(url, :body => json), :update
       end
