@@ -1,6 +1,9 @@
 Harpy
 ======
 
+[![Build Status](http://travis-ci.org/TalentBox/harpy.png)](http://travis-ci.org/TalentBox/harpy)
+[![Code Climate](https://codeclimate.com/github/TalentBox/harpy.png)](https://codeclimate.com/github/TalentBox/harpy)
+
 Client for REST API with HATEOAS
 
 Dependencies
@@ -31,14 +34,14 @@ Usage
         model.attributes = {"company" => "Stark Enterprises"}
         model.firstname # => "Anthony"
         model.company # => "Stark Enterprises"
-        
+
         # Because model is not persisted you can read any attribute, allowing
         # to use form_for on new resources to which the client doesn't know the
         # existing attributes yet
         model.email # => nil
 
         # Fetch by url
-        MyModel.from_url "http://localhost/mymodel/1" 
+        MyModel.from_url "http://localhost/mymodel/1"
         # => instance of MyModel with attributes filled in on 200
         # => nil on 404
         # => raises Harpy::ClientTimeout on timeout
@@ -47,7 +50,7 @@ Usage
 
         # Fetch multiple by url in parallel
         MyModel.from_url ["http://localhost/mymodel/1", "http://localhost/mymodel/2"]
-        
+
         # Get index
         MyModel.search
         # will call GET http://localhost/mymodel given the following entry_point response:
@@ -60,7 +63,7 @@ Usage
         # => raises Harpy::ClientTimeout on timeout
         # => raises Harpy::ClientError on Curl error
         # => raises Harpy::InvalidResponseCode on other response codes
-        
+
         # Search by first_name
         MyModel.search :firstname => "Anthony" # GET http://localhost/mymodel?firstname=Anthony
 
@@ -152,17 +155,12 @@ Usage
         class SecondModel
           include Harpy::Resource
         end
-      
+
         Harpy::Resource.from_url({
-           FirstModel => ["http://localhost/firstmodel/1", "http://localhost/firstmodel/2"], 
-           SecondModel => ["http://localhost/secondmodel/1"], 
+           FirstModel => ["http://localhost/firstmodel/1", "http://localhost/firstmodel/2"],
+           SecondModel => ["http://localhost/secondmodel/1"],
         })
         # => {FirstModel => [...], SecondModel => [...]}
-
-Build Status
----------
-
-[![Build Status](http://travis-ci.org/TalentBox/harpy.png)](http://travis-ci.org/TalentBox/harpy)
 
 License
 -------
