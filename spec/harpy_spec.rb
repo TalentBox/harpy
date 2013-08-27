@@ -8,7 +8,7 @@ describe Harpy do
   end
 
   it "does allow using another client" do
-    custom_client = mock
+    custom_client = double
     Harpy.client = custom_client
     Harpy.client.should be custom_client
   end
@@ -33,7 +33,7 @@ describe Harpy do
   end
 
   it "does allow setting entry_point manually" do
-    Harpy.entry_point = (entry_point = mock)
+    Harpy.entry_point = (entry_point = double)
     Harpy.entry_point.should be entry_point
     entry_point.should_receive(:url).and_return "http://localhost"
     Harpy.entry_point_url.should == "http://localhost"
@@ -41,7 +41,7 @@ describe Harpy do
 
   it "Harpy.reset clears both client and entry_point" do
     Harpy.entry_point_url = "http://localhost"
-    Harpy.client = (custom_client = mock)
+    Harpy.client = (custom_client = double)
     Harpy.reset
     Harpy.entry_point_url.should be_nil
     Harpy.client.should_not be custom_client

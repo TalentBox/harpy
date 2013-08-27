@@ -1,10 +1,9 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "harpy/version"
 
 Gem::Specification.new do |s|
   s.name        = "harpy"
-  s.version     = Harpy::VERSION
+  s.version     = "0.5.0"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Joseph HALTER", "Jonathan TRON"]
   s.email       = ["joseph.halter@thetalentbox.com", "jonathan.tron@thetalentbox.com"]
@@ -18,13 +17,12 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_runtime_dependency("typhoeus", ["~> 0.4.2"])
-  s.add_runtime_dependency("activesupport", [">= 3.1.0"])
-  s.add_runtime_dependency("activemodel", [">= 3.1.0"])
-  s.add_runtime_dependency("hash-deep-merge", ["~> 0.1.1"])
-  s.add_runtime_dependency("yajl-ruby", ["~> 1.1.0"])
+  s.add_runtime_dependency "typhoeus", ["0.6.5"]
+  s.add_runtime_dependency "activesupport", [">= 3.1.0"]
+  s.add_runtime_dependency "activemodel", [">= 3.1.0"]
+  s.add_runtime_dependency "hash-deep-merge", ["~> 0.1.1"]
+  s.add_runtime_dependency "yajl-ruby", ["~> 1.1.0"]
 
-  s.add_development_dependency("rake", [">= 0.8.7"])
-  s.add_development_dependency("rspec", ["~> 2.6.0"])
-  s.add_development_dependency("rocco", ["~> 0.7"])
+  s.add_development_dependency "rake", [">= 0.8.7"]
+  s.add_development_dependency "rspec"
 end

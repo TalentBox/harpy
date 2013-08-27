@@ -31,7 +31,7 @@ describe Harpy::EntryPoint do
       subject.resource_url("company_url")
     end
   end
-  
+
   describe "#urn(urn)" do
     let(:urn) { "urn:harpy:company:1" }
     let(:company_url) { "#{url}/company/1"}
@@ -52,5 +52,5 @@ describe Harpy::EntryPoint do
       subject.urn(urn)
     end
   end
-  
+
 end

@@ -6,7 +6,7 @@ describe Harpy::Resource do
     let(:json_response) { %Q|{"name": "Harpy ltd", "link": [{"rel": "self", "href": "#{company_url}"}]}| }
     let(:success_response) { Typhoeus::Response.new :code => 200, :body => json_response}
     it "queries multiple resources in parallel and return instances" do
-      Typhoeus::Hydra.hydra.stub(:get, company_url).and_return success_response
+      Typhoeus.stub(company_url, method: :get){ success_response }
       responses = Harpy::Resource.from_url({ Harpy::Spec::Company => [company_url] })
       responses.should have(1).keys
       responses[Harpy::Spec::Company].should have(1).item
@@ -105,8 +105,8 @@ describe "class including Harpy::Resource" do
             ]
           }
         eos
-        Typhoeus::Hydra.hydra.stub(:get, url1).and_return response1
-        Typhoeus::Hydra.hydra.stub(:get, url2).and_return response2
+        Typhoeus.stub(url1, method: :get){ response1 }
+        Typhoeus.stub(url2, method: :get){ response2 }
         results = Harpy::Spec::Company.from_url [url1, url2]
         results.should have(2).items
         results[0].should be_kind_of Harpy::Spec::Company
@@ -131,18 +131,18 @@ describe "class including Harpy::Resource" do
       let(:url) { "http://localhost/company/1" }
       it "asks Harpy.entry_point to convert urn to url then call .from_url" do
         # urn:harpy:company:1 -> http://localhost/company/1
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn).and_return url
 
         # http://localhost/company/1 -> Harpy::Spec::Company instance
-        Harpy::Spec::Company.should_receive(:from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.should_receive(:from_url).with(url).and_return(expected = double)
         Harpy::Spec::Company.from_urn(urn).should be expected
       end
       it "is nil if urn is not found" do
         # urn:harpy:company:1 -> nil
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn)
-        
+
         Harpy::Spec::Company.from_urn(urn).should be_nil
       end
     end
@@ -160,7 +160,7 @@ describe "class including Harpy::Resource" do
       it "raises Harpy::EntryPointRequired" do
         # 1 -> urn:harpy:company:1
         Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
-        
+
         lambda{
           Harpy::Spec::Company.from_id(1)
         }.should raise_error Harpy::EntryPointRequired
@@ -172,27 +172,27 @@ describe "class including Harpy::Resource" do
       it "asks Harpy.entry_point to convert urn to url then call .from_url" do
         # 1 -> urn:harpy:company:1
         Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
-        
+
         # urn:harpy:company:1 -> http://localhost/company/1
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn).and_return url
-        
+
         # http://localhost/company/1 -> Harpy::Spec::Company instance
-        Harpy::Spec::Company.should_receive(:from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.should_receive(:from_url).with(url).and_return(expected = double)
         Harpy::Spec::Company.from_id(1).should be expected
       end
       it "is nil if urn is not found" do
         # 1 -> urn:harpy:company:1
         Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
-        
+
         # urn:harpy:company:1 -> nil
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn)
-        
+
         Harpy::Spec::Company.from_id(1).should be_nil
       end
     end
-  end  
+  end
   describe ".delete_from_url(url)" do
     context "called with only one url" do
       let(:url){ "http://localhost/company/1" }
@@ -228,16 +228,16 @@ describe "class including Harpy::Resource" do
       let(:url) { "http://localhost/company/1" }
       it "asks Harpy.entry_point to convert urn to url then call .from_url" do
         # urn:harpy:company:1 -> http://localhost/company/1
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn).and_return url
 
         # http://localhost/company/1 -> Harpy::Spec::Company instance
-        Harpy::Spec::Company.should_receive(:delete_from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.should_receive(:delete_from_url).with(url).and_return(expected = double)
         Harpy::Spec::Company.delete_from_urn(urn).should be expected
       end
       it "is nil if urn is not found" do
         # urn:harpy:company:1 -> nil
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn)
 
         Harpy::Spec::Company.delete_from_urn(urn).should be_false
@@ -257,7 +257,7 @@ describe "class including Harpy::Resource" do
       it "raises Harpy::EntryPointRequired" do
         # 1 -> urn:harpy:company:1
         Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
-        
+
         lambda{
           Harpy::Spec::Company.delete_from_id(1)
         }.should raise_error Harpy::EntryPointRequired
@@ -269,23 +269,23 @@ describe "class including Harpy::Resource" do
       it "asks Harpy.entry_point to convert urn to url then call .from_url" do
         # 1 -> urn:harpy:company:1
         Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
-        
+
         # urn:harpy:company:1 -> http://localhost/company/1
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn).and_return url
-        
+
         # http://localhost/company/1 -> Harpy::Spec::Company instance
-        Harpy::Spec::Company.should_receive(:delete_from_url).with(url).and_return(expected = mock)
+        Harpy::Spec::Company.should_receive(:delete_from_url).with(url).and_return(expected = double)
         Harpy::Spec::Company.delete_from_id(1).should be expected
       end
       it "is nil if urn is not found" do
         # 1 -> urn:harpy:company:1
         Harpy::Spec::Company.should_receive(:urn).with(1).and_return urn
-        
+
         # urn:harpy:company:1 -> nil
-        Harpy.entry_point = mock
+        Harpy.entry_point = double
         Harpy.entry_point.should_receive(:urn).with(urn)
-        
+
         Harpy::Spec::Company.delete_from_id(1).should be_false
       end
     end
@@ -305,7 +305,7 @@ describe "class including Harpy::Resource" do
   describe ".search(conditions)" do
     let(:url){ "http://localhost/company" }
     before do
-       Harpy.entry_point = mock
+       Harpy.entry_point = double
        Harpy.entry_point.should_receive(:resource_url).with("harpy/spec/company").and_return url
     end
     it "return properly filled instances on 200" do
@@ -435,7 +435,7 @@ describe "class including Harpy::Resource" do
     end
     describe "#url" do
       it "searches url to self inside links" do
-        subject.should_receive(:link).with("self").and_return (expected = mock)
+        subject.should_receive(:link).with("self").and_return (expected = double)
         subject.url.should be expected
       end
       it "is nil when no link to self can be found" do
@@ -445,8 +445,8 @@ describe "class including Harpy::Resource" do
     end
     describe "#url_collection" do
       it "defaults to entry_point link which rel matches resource name" do
-        Harpy.entry_point = mock
-        Harpy.entry_point.should_receive(:resource_url).with("harpy/spec/company").and_return (expected = mock)
+        Harpy.entry_point = double
+        Harpy.entry_point.should_receive(:resource_url).with("harpy/spec/company").and_return (expected = double)
         subject.url_collection.should be expected
       end
     end
@@ -533,14 +533,14 @@ describe "class including Harpy::Resource" do
   end
   describe "#as_json" do
     let(:url) { "http://localhost/user/1" }
-    subject do 
+    subject do
       Harpy::Spec::User.new({
-        "urn" => "urn:harpy:user:1", 
-        "company_name" => "Stark Enterprises", 
+        "urn" => "urn:harpy:user:1",
+        "company_name" => "Stark Enterprises",
         "link" => [{"rel" => "self", "href" => url}],
       })
     end
-  
+
     it "exclude link and urn from attributes" do
       subject.as_json.should == {"company_name" => "Stark Enterprises"}
     end
@@ -633,8 +633,8 @@ describe "class including Harpy::Resource" do
       let(:body) { '{"company_name":"Stark Enterprises"}' }
       subject do
         Harpy::Spec::User.new({
-          "urn" => "urn:harpy:user:1", 
-          "company_name" => "Stark Enterprises", 
+          "urn" => "urn:harpy:user:1",
+          "company_name" => "Stark Enterprises",
           "link" => [{"rel" => "self", "href" => url}],
         })
       end
@@ -710,8 +710,8 @@ describe "class including Harpy::Resource" do
       let(:url) { "http://localhost/user/1" }
       subject do
         Harpy::Spec::User.new({
-          "urn" => "urn:harpy:user:1", 
-          "company_name" => "Stark Enterprises", 
+          "urn" => "urn:harpy:user:1",
+          "company_name" => "Stark Enterprises",
           "link" => [{"rel" => "self", "href" => url}],
         })
       end

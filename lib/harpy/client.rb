@@ -59,7 +59,7 @@ module Harpy
           Typhoeus::Request.new url, opts.merge(:method => method)
         end
       else
-        Typhoeus::Request.run urls, opts.merge(:method => method)
+        Typhoeus::Request.send method, urls, opts
       end
     end
   end

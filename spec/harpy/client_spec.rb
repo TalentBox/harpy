@@ -19,35 +19,35 @@ describe Harpy::Client do
       context "with one url" do
         before do
           @expected = Typhoeus::Response.new :code => 200
-          Typhoeus::Hydra.hydra.stub(method, entry_url).and_return(@expected)
+          Typhoeus.stub(entry_url, method: method){@expected}
         end
         it "sends a #{method.to_s.upcase} to the url" do
           subject.send(method, entry_url).should == @expected
         end
         it "merges options" do
           client = Harpy::Client.new :headers => {"Authorization" => "spec"}
-          Typhoeus::Hydra.hydra.stub(method, entry_url).and_return(Typhoeus::Response.new :code => 200)
+          Typhoeus.stub(entry_url, method: method){Typhoeus::Response.new :code => 200}
           response = client.send method, entry_url, :headers => {"X-Files" => "Harpy"}
-          response.request.headers.should include({"X-Files" => "Harpy", "Authorization" => "spec"})
+          response.request.options[:headers].should include({"X-Files" => "Harpy", "Authorization" => "spec"})
         end
       end
       context "with multiple urls" do
         it "does not execute requests" do
           lambda {
             subject.send method, [entry_url, users_url]
-          }.should_not raise_error Typhoeus::Hydra::NetConnectNotAllowedError
+          }.should_not raise_error
         end
         it "returns one requests per url" do
           requests = subject.send method, [entry_url, users_url]
           requests.size.should == 2
-          requests.collect(&:method).should =~ [method, method]
+          requests.collect{|r| r.options[:method]}.should =~ [method, method]
           requests.collect(&:url).should =~ [entry_url, users_url]
         end
         it "merges options" do
           client = Harpy::Client.new :headers => {"Authorization" => "spec"}
           requests = client.send method, [entry_url, users_url], :headers => {"X-Files" => "Harpy"}
           requests.each do |request|
-            request.headers.should include({"X-Files" => "Harpy", "Authorization" => "spec"})
+            request.options[:headers].should include({"X-Files" => "Harpy", "Authorization" => "spec"})
           end
         end
       end
@@ -57,9 +57,9 @@ describe Harpy::Client do
     before do
       @entry_response = Typhoeus::Response.new :code => 200, :body => "entry"
       @users_response = Typhoeus::Response.new :code => 200, :body => "users"
-      
-      Typhoeus::Hydra.hydra.stub(:get, entry_url).and_return @entry_response
-      Typhoeus::Hydra.hydra.stub(:get, users_url).and_return @users_response
+
+      Typhoeus.stub(entry_url, method: :get){ @entry_response }
+      Typhoeus.stub(users_url, method: :get){ @users_response }
     end
     it "executes requests in parallel" do
       Typhoeus::Hydra.hydra.should_receive(:run).once
@@ -79,17 +79,17 @@ describe Harpy::Client do
   describe "#invalid_code(response)" do
     it "raises Harpy::ClientTimeout on request timeout" do
       lambda {
-        subject.invalid_code mock("Response", :timed_out? => true)
+        subject.invalid_code double("Response", :timed_out? => true)
       }.should raise_error Harpy::ClientTimeout
     end
     it "raises Harpy::ClientError on code 0" do
       lambda {
-        subject.invalid_code mock("Response", :timed_out? => false, :code => 0, :curl_error_message => "Could not connect to server")
+        subject.invalid_code double("Response", :timed_out? => false, :code => 0, :curl_error_message => "Could not connect to server")
       }.should raise_error Harpy::ClientError, "Could not connect to server"
     end
     it "raises Harpy::InvalidResponseCode with code otherwise" do
       lambda {
-        subject.invalid_code mock("Response", :timed_out? => false, :code => 404)
+        subject.invalid_code double("Response", :timed_out? => false, :code => 404)
       }.should raise_error Harpy::InvalidResponseCode, "404"
     end
   end
