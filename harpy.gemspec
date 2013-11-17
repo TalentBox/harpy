@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "harpy"
-  s.version     = "0.5.1"
+  s.version     = "0.5.2"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Joseph HALTER", "Jonathan TRON"]
   s.email       = ["joseph.halter@thetalentbox.com", "jonathan.tron@thetalentbox.com"]
