@@ -43,7 +43,7 @@ module Harpy
       if response.timed_out?
         raise ClientTimeout
       elsif response.code.zero?
-        raise ClientError, response.curl_error_message
+        raise ClientError, response.return_message
       else
         raise InvalidResponseCode, response.code.to_s
       end

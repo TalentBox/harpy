@@ -84,7 +84,7 @@ describe Harpy::Client do
     end
     it "raises Harpy::ClientError on code 0" do
       lambda {
-        subject.invalid_code double("Response", :timed_out? => false, :code => 0, :curl_error_message => "Could not connect to server")
+        subject.invalid_code double("Response", :timed_out? => false, :code => 0, :return_message => "Could not connect to server")
       }.should raise_error Harpy::ClientError, "Could not connect to server"
     end
     it "raises Harpy::InvalidResponseCode with code otherwise" do
