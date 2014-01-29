@@ -14,7 +14,6 @@ Dependencies
 * gem "activesupport", ">= 3.1.0"
 * gem "activemodel", ">= 3.1.0"
 * gem "hash-deep-merge", "~> 0.1.1"
-* gem "yajl-ruby", "~> 0.8.2"
 
 Usage
 -----

@@ -1,4 +1,4 @@
-require "yajl"
+require "json"
 
 module Harpy
   class EntryPoint
@@ -12,7 +12,7 @@ module Harpy
       response = Harpy.client.get url
       case response.code
       when 200
-        body = Yajl::Parser.parse response.body
+        body = JSON.parse response.body
         link = (body["link"] || []).detect{|link| link["rel"] == resource_type}
         link["href"] if link
       else

@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "harpy"
-  s.version     = "0.5.2"
+  s.version     = "1.0.0"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Joseph HALTER", "Jonathan TRON"]
   s.email       = ["joseph.halter@thetalentbox.com", "jonathan.tron@thetalentbox.com"]
@@ -21,7 +21,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "activesupport", [">= 3.1.0"]
   s.add_runtime_dependency "activemodel", [">= 3.1.0"]
   s.add_runtime_dependency "hash-deep-merge", ["~> 0.1.1"]
-  s.add_runtime_dependency "yajl-ruby", ["~> 1.1.0"]
 
   s.add_development_dependency "rake", [">= 0.8.7"]
   s.add_development_dependency "rspec"

@@ -2,7 +2,7 @@ require "active_support"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/numeric/bytes"
 require "active_model"
-require "yajl"
+require "json"
 
 module Harpy
   module Resource
@@ -63,7 +63,7 @@ module Harpy
         response = Harpy.client.get url, :params => conditions
         case response.code
         when 200
-          parsed = Yajl::Parser.parse response.body
+          parsed = JSON.parse response.body
           items = parsed[resource_name].collect{|model| new model}
           Harpy::Collection.new parsed.merge(:items => items)
         else
@@ -102,7 +102,7 @@ module Harpy
       def from_url_handler(response)
         case response.code
         when 200
-          new Yajl::Parser.parse response.body
+          new JSON.parse response.body
         when 404
           nil
         else
@@ -147,7 +147,7 @@ module Harpy
     def save
       if valid?
         run_callbacks :save do
-          json = Yajl::Encoder.encode as_json
+          json = JSON.generate as_json
           raise BodyToBig, "Size: #{json.bytesize} bytes (max 1MB)" if json.bytesize > 1.megabyte
           persisted? ? update(json) : create(json)
         end
@@ -219,14 +219,14 @@ module Harpy
     def process_response(response, context)
       case response.code
       when 200, 201, 302
-        @attrs.merge! Yajl::Parser.parse(response.body)
+        @attrs.merge! JSON.parse(response.body)
         true
       when 204
         context==:create ? Harpy.client.invalid_code(response) : true
       when 401
         raise Harpy::Unauthorized, "Server returned a 401 response code"
       when 422
-        Yajl::Parser.parse(response.body)["errors"].each do |attr, attr_errors|
+        JSON.parse(response.body)["errors"].each do |attr, attr_errors|
           attr_errors.each{|attr_error| errors[attr] = attr_error }
         end
         false
