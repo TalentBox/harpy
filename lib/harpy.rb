@@ -14,6 +14,7 @@ module Harpy
   autoload :Resource, "harpy/resource"
   autoload :BodyToBig, "harpy/resource"
   autoload :UnknownResponseCode, "harpy/resource"
+  autoload :VERSION, "harpy/gem_version"
 
   def self.client=(new_client)
     @client = new_client
@@ -38,7 +39,7 @@ module Harpy
   def self.entry_point
     @entry_point || raise(EntryPointRequired, 'you can setup one with Harpy.entry_point_url = "http://localhost"')
   end
-  
+
   def self.reset
     @client = nil
     @entry_point = nil

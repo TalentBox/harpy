@@ -9,11 +9,11 @@ Client for REST API with HATEOAS
 Dependencies
 ------------
 
-* Ruby 1.8.7 or 1.9.2
-* gem "typhoeus", "~> 0.2.4"
-* gem "activesupport", ">= 3.1.0"
-* gem "activemodel", ">= 3.1.0"
-* gem "hash-deep-merge", "~> 0.1.1"
+* Ruby >= 2.4.
+* gem "typhoeus", ">= 0.6.5"
+* gem "activesupport", ">= 5.2.0"
+* gem "activemodel", ">= 5.2.0"
+* gem "hash-deep-merge", ">= 0.1.1"
 
 Usage
 -----
