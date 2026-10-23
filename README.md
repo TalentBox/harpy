@@ -1,7 +1,7 @@
 Harpy
 ======
 
-[![Build Status](https://travis-ci.org/TalentBox/harpy.png?branch=master)](https://travis-ci.org/TalentBox/harpy)
+[![Test](https://github.com/TalentBox/harpy/actions/workflows/test.yml/badge.svg)](https://github.com/TalentBox/harpy/actions/workflows/test.yml)
 [![Code Climate](https://codeclimate.com/github/TalentBox/harpy.png)](https://codeclimate.com/github/TalentBox/harpy)
 
 Client for REST API with HATEOAS
@@ -9,8 +9,8 @@ Client for REST API with HATEOAS
 Dependencies
 ------------
 
-* Ruby >= 2.4.
-* gem "typhoeus", ">= 0.6.5"
+* Ruby >= 3.4.
+* gem "httpx", ">= 1.0"
 * gem "activesupport", ">= 5.2.0"
 * gem "activemodel", ">= 5.2.0"
 * gem "hash-deep-merge", ">= 0.1.1"
@@ -44,7 +44,7 @@ Usage
         # => instance of MyModel with attributes filled in on 200
         # => nil on 404
         # => raises Harpy::ClientTimeout on timeout
-        # => raises Harpy::ClientError on Curl error
+        # => raises Harpy::ClientError on HTTP client error
         # => raises Harpy::InvalidResponseCode on other response codes
 
         # Fetch multiple by url in parallel
@@ -60,7 +60,7 @@ Usage
           }
         # => return an array of MyModel instances on 200
         # => raises Harpy::ClientTimeout on timeout
-        # => raises Harpy::ClientError on Curl error
+        # => raises Harpy::ClientError on HTTP client error
         # => raises Harpy::InvalidResponseCode on other response codes
 
         # Search by first_name

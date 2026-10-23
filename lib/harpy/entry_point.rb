@@ -10,7 +10,7 @@ module Harpy
 
     def resource_url(resource_type)
       response = Harpy.client.get url
-      case response.code
+      case Harpy.client.response_status(response)
       when 200
         body = JSON.parse response.body
         link = (body["link"] || []).detect{|link| link["rel"] == resource_type}
@@ -22,9 +22,9 @@ module Harpy
 
     def urn(urn)
       response = Harpy.client.get "#{url}/#{urn}"
-      case response.code
+      case Harpy.client.response_status(response)
       when 301
-        response.headers_hash["Location"]
+        response.headers["location"]
       when 404
         nil
       else

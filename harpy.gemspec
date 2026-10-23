@@ -12,17 +12,19 @@ Gem::Specification.new do |s|
   s.summary     = %q{Client for REST API}
   s.description = %q{Client for REST API with HATEOAS}
   s.license     = "MIT"
+  s.required_ruby_version = ">= 3.4"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_runtime_dependency "typhoeus", ">= 0.6.5"
+  s.add_runtime_dependency "httpx", ">= 1.0"
   s.add_runtime_dependency "activesupport", [">= 5.2.0"]
   s.add_runtime_dependency "activemodel", [">= 5.2.0"]
   s.add_runtime_dependency "hash-deep-merge", [">= 0.1.1"]
 
   s.add_development_dependency "rake", [">= 0.8.7"]
   s.add_development_dependency "rspec"
+  s.add_development_dependency "webmock"
 end

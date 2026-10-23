@@ -62,7 +62,7 @@ module Harpy
 
       def search(conditions={})
         response = Harpy.client.get url, :params => conditions
-        case response.code
+        case Harpy.client.response_status(response)
         when 200
           parsed = JSON.parse response.body
           items = parsed[resource_name].collect{|model| new model}
@@ -109,7 +109,7 @@ module Harpy
       end
 
       def from_url_handler(response)
-        case response.code
+        case Harpy.client.response_status(response)
         when 200
           new JSON.parse response.body
         when 404
@@ -120,7 +120,7 @@ module Harpy
       end
 
       def delete_from_url_handler(response)
-        case response.code
+        case Harpy.client.response_status(response)
         when 204
           true
         when 404
@@ -228,7 +228,7 @@ module Harpy
       end
 
       def process_response(response, context)
-        case response.code
+        case Harpy.client.response_status(response)
         when 200, 201, 302
           @attrs.merge! JSON.parse(response.body)
           true
@@ -249,6 +249,7 @@ module Harpy
       def read_attribute_for_validation(key)
         @attrs[key]
       end
+      public :read_attribute_for_validation
 
       def method_missing(method, *args)
         key = method.to_s

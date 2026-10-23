@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: docker
+    container:
+      image: docker.io/library/ruby:${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ruby: "3.4"
+            image: "3.4"
+          - ruby: "4.0"
+            image: "4.0"
+          - ruby: "4.1"
+            image: "4.1-rc"
+    steps:
+      - name: Install Node.js 24 for the checkout action
+        run: |
+          apt-get update
+          apt-get install -y ca-certificates curl
+          curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+          apt-get install -y nodejs
+          node --version
+      - name: Check out the repository
+        uses: actions/checkout@v7
+      - run: bundle install
+      - run: bundle exec rake

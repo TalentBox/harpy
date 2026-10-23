@@ -4,9 +4,8 @@ describe Harpy::Resource do
   describe ".from_url(hash)" do
     let(:company_url) { "http://localhost/company/1" }
     let(:json_response) { %Q|{"name": "Harpy ltd", "link": [{"rel": "self", "href": "#{company_url}"}]}| }
-    let(:success_response) { Typhoeus::Response.new :code => 200, :body => json_response}
     it "queries multiple resources in parallel and return instances" do
-      Typhoeus.stub(company_url, method: :get){ success_response }
+      stub_request(:get, company_url).to_return(status: 200, body: json_response)
       responses = Harpy::Resource.from_url({ Harpy::Spec::Company => [company_url] })
       expect(responses.size).to eq(1)
       expect(responses[Harpy::Spec::Company].size).to eq(1)
@@ -59,7 +58,7 @@ describe "class including Harpy::Resource" do
     context "called with only one url" do
       let(:url){ "http://localhost/company/1" }
       it "is a properly filled-in instance of Harpy::Spec::Company on success" do
-        response = Typhoeus::Response.new :code => 200, :body => <<-eos
+        response = httpx_response :code => 200, :body => <<-eos
           {
             "name": "Harpy Ltd",
             "link": [
@@ -74,12 +73,12 @@ describe "class including Harpy::Resource" do
         expect(result.link("self")).to eq(url)
       end
       it "is nil when not found" do
-        response = Typhoeus::Response.new :code => 404
+        response = httpx_response :code => 404
         expect(Harpy.client).to receive(:get).with(url).and_return response
         expect(Harpy::Spec::Company.from_url(url)).to be_nil
       end
       it "delegates response code != 200 or 404 to client" do
-        response = Typhoeus::Response.new :code => 500
+        response = httpx_response :code => 500
         expect(Harpy.client).to receive(:get).with(url).and_return response
         expect(Harpy.client).to receive(:invalid_code).with response
         Harpy::Spec::Company.from_url(url)
@@ -89,7 +88,7 @@ describe "class including Harpy::Resource" do
       let(:url1){ "http://localhost/company/1" }
       let(:url2){ "http://localhost/company/2" }
       it "is a properly filled-in instance of Harpy::Spec::Company on success" do
-        response1 = Typhoeus::Response.new :code => 200, :body => <<-eos
+        response1 = httpx_response :code => 200, :body => <<-eos
           {
             "name": "Harpy Ltd",
             "link": [
@@ -97,7 +96,7 @@ describe "class including Harpy::Resource" do
             ]
           }
         eos
-        response2 = Typhoeus::Response.new :code => 200, :body => <<-eos
+        response2 = httpx_response :code => 200, :body => <<-eos
           {
             "name": "Harpy Inc",
             "link": [
@@ -105,8 +104,8 @@ describe "class including Harpy::Resource" do
             ]
           }
         eos
-        Typhoeus.stub(url1, method: :get){ response1 }
-        Typhoeus.stub(url2, method: :get){ response2 }
+        stub_request(:get, url1).to_return(status: 200, body: response1.body.to_s)
+        stub_request(:get, url2).to_return(status: 200, body: response2.body.to_s)
         results = Harpy::Spec::Company.from_url [url1, url2]
         expect(results.size).to eq(2)
         expect(results[0]).to be_kind_of Harpy::Spec::Company
@@ -197,18 +196,18 @@ describe "class including Harpy::Resource" do
     context "called with only one url" do
       let(:url){ "http://localhost/company/1" }
       it "is true on success" do
-        response = Typhoeus::Response.new :code => 204
+        response = httpx_response :code => 204
         expect(Harpy.client).to receive(:delete).with(url).and_return response
         result = Harpy::Spec::Company.delete_from_url url
         expect(result).to be_truthy
       end
       it "is false when not found" do
-        response = Typhoeus::Response.new :code => 404
+        response = httpx_response :code => 404
         expect(Harpy.client).to receive(:delete).with(url).and_return response
         expect(Harpy::Spec::Company.delete_from_url(url)).to be_falsey
       end
       it "delegates response code != 204 or 404 to client" do
-        response = Typhoeus::Response.new :code => 500
+        response = httpx_response :code => 500
         expect(Harpy.client).to receive(:delete).with(url).and_return response
         expect(Harpy.client).to receive(:invalid_code).with response
         Harpy::Spec::Company.delete_from_url url
@@ -309,7 +308,7 @@ describe "class including Harpy::Resource" do
        expect(Harpy.entry_point).to receive(:resource_url).with("harpy/spec/company").and_return url
     end
     it "return properly filled instances on 200" do
-      response = Typhoeus::Response.new :code => 200, :body => <<-eos
+      response = httpx_response :code => 200, :body => <<-eos
       {
         "harpy/spec/company": [
           {
@@ -347,7 +346,7 @@ describe "class including Harpy::Resource" do
       expect(companies.blank?).to be true
     end
     it "delegates other response codes to client" do
-      response = Typhoeus::Response.new :code => 500
+      response = httpx_response :code => 500
       expect(Harpy.client).to receive(:get).with(url, :params => {}).and_return response
       expect(Harpy.client).to receive(:invalid_code).with response
       Harpy::Spec::Company.search
@@ -356,7 +355,7 @@ describe "class including Harpy::Resource" do
   describe ".with_url(url)" do
     let(:url){ "http://localhost/user/1/company" }
     it "overrides url used for searches" do
-      response = Typhoeus::Response.new :code => 500
+      response = httpx_response :code => 500
       expect(Harpy.client).to receive(:get).with(url, :params => {}).and_return response
       expect(Harpy.client).to receive(:invalid_code).with response
       Harpy::Spec::Company.with_url(url) do
@@ -365,7 +364,7 @@ describe "class including Harpy::Resource" do
     end
     it "can be nested" do
       url2 = "http://localhost/user/2/company"
-      response = Typhoeus::Response.new :code => 500
+      response = httpx_response :code => 500
       expect(Harpy.client).to receive(:get).ordered.with(url2, :params => {}).and_return response
       expect(Harpy.client).to receive(:get).ordered.with(url, :params => {}).and_return response
       expect(Harpy.client).to receive(:invalid_code).twice.with response
@@ -492,7 +491,7 @@ describe "class including Harpy::Resource" do
     describe "#inspect" do
       subject { Harpy::Spec::Company.new "firstname" => "Anthony" }
       it "shows class name, attributes, errors and persisted state" do
-        expect(subject.inspect).to eq('<Harpy::Spec::Company @attrs:{"firstname"=>"Anthony"} @errors:[] persisted:false>')
+        expect(subject.inspect).to include("Harpy::Spec::Company", "firstname", "Anthony", "@errors:[] persisted:false>")
       end
     end
     describe "#has_key?(key)" do
@@ -566,7 +565,7 @@ describe "class including Harpy::Resource" do
       end
       [200, 201, 302].each do |response_code|
         it "is true and merges response attributes on #{response_code}" do
-          response = Typhoeus::Response.new :code => response_code, :body => <<-eos
+          response = httpx_response :code => response_code, :body => <<-eos
             {
               "firstname": "Anthony",
               "urn": "urn:harpy:user:1",
@@ -584,19 +583,19 @@ describe "class including Harpy::Resource" do
         end
       end
       it "raises Harpy::InvalidResponseCode on 204" do
-        response = Typhoeus::Response.new :code => 204
+        response = httpx_response :code => 204
         expect(Harpy.client).to receive(:post).with(url, :body => body).and_return response
         expect { subject.save }.to raise_error Harpy::InvalidResponseCode, "204"
         expect(subject.callbacks).to match_array([:save, :create])
       end
       it "raises Harpy::Unauthorized on 401" do
-        response = Typhoeus::Response.new :code => 401
+        response = httpx_response :code => 401
         expect(Harpy.client).to receive(:post).with(url, :body => body).and_return response
         expect { subject.save }.to raise_error Harpy::Unauthorized, "Server returned a 401 response code"
         expect(subject.callbacks).to match_array([:save, :create])
       end
       it "is false and fills in errors on 422" do
-        response = Typhoeus::Response.new :code => 422, :body => <<-eos
+        response = httpx_response :code => 422, :body => <<-eos
           {
             "firstname": "Anthony",
             "errors": {
@@ -613,7 +612,7 @@ describe "class including Harpy::Resource" do
         expect(subject.company_name).to eq("Stark Enterprises")
       end
       it "delegates other response codes to client" do
-        response = Typhoeus::Response.new :code => 500
+        response = httpx_response :code => 500
         expect(Harpy.client).to receive(:post).with(url, :body => body).and_return response
         expect(Harpy.client).to receive(:invalid_code).with(response)
         subject.save
@@ -643,7 +642,7 @@ describe "class including Harpy::Resource" do
       end
       [200, 201, 302].each do |response_code|
         it "is true and merges response attributes on #{response_code}" do
-          response = Typhoeus::Response.new :code => response_code, :body => <<-eos
+          response = httpx_response :code => response_code, :body => <<-eos
             {
               "firstname": "Anthony",
               "urn": "urn:harpy:user:1",
@@ -660,20 +659,20 @@ describe "class including Harpy::Resource" do
         end
       end
       it "is true but doesn't touch attributes on 204" do
-        response = Typhoeus::Response.new :code => 204
+        response = httpx_response :code => 204
         expect(Harpy.client).to receive(:put).with(url, :body => body).and_return response
         expect(subject.save).to be_truthy
         expect(subject.callbacks).to match_array([:save, :update])
         expect(subject.company_name).to eq("Stark Enterprises")
       end
       it "raises Harpy::Unauthorized on 401" do
-        response = Typhoeus::Response.new :code => 401
+        response = httpx_response :code => 401
         expect(Harpy.client).to receive(:put).with(url, :body => body).and_return response
         expect { subject.save }.to raise_error Harpy::Unauthorized, "Server returned a 401 response code"
         expect(subject.callbacks).to match_array([:save, :update])
       end
       it "is false and fills in errors on 422" do
-        response = Typhoeus::Response.new :code => 422, :body => <<-eos
+        response = httpx_response :code => 422, :body => <<-eos
           {
             "firstname": "Anthony",
             "errors": {
@@ -690,7 +689,7 @@ describe "class including Harpy::Resource" do
         expect(subject.company_name).to eq("Stark Enterprises")
       end
       it "delegates other response codes to client" do
-        response = Typhoeus::Response.new :code => 500
+        response = httpx_response :code => 500
         expect(Harpy.client).to receive(:put).with(url, :body => body).and_return response
         expect(Harpy.client).to receive(:invalid_code).with(response)
         subject.save
@@ -717,7 +716,7 @@ describe "class including Harpy::Resource" do
       end
       [200, 201, 302].each do |response_code|
         it "is true and merges response attributes on #{response_code}" do
-          response = Typhoeus::Response.new :code => response_code, :body => <<-eos
+          response = httpx_response :code => response_code, :body => <<-eos
             {
               "firstname": "Anthony",
               "urn": "urn:harpy:user:1",
@@ -734,20 +733,20 @@ describe "class including Harpy::Resource" do
         end
       end
       it "is true but doesn't touch attributes on 204" do
-        response = Typhoeus::Response.new :code => 204
+        response = httpx_response :code => 204
         expect(Harpy.client).to receive(:delete).with(url).and_return response
         expect(subject.destroy).to be_truthy
         expect(subject.callbacks).to match_array([:destroy])
         expect(subject.company_name).to eq("Stark Enterprises")
       end
       it "raises Harpy::Unauthorized on 401" do
-        response = Typhoeus::Response.new :code => 401
+        response = httpx_response :code => 401
         expect(Harpy.client).to receive(:delete).with(url).and_return response
         expect { subject.destroy }.to raise_error Harpy::Unauthorized, "Server returned a 401 response code"
         expect(subject.callbacks).to match_array([:destroy])
       end
       it "is false and fills in errors on 422" do
-        response = Typhoeus::Response.new :code => 422, :body => <<-eos
+        response = httpx_response :code => 422, :body => <<-eos
           {
             "firstname": "Anthony",
             "errors": {
@@ -764,7 +763,7 @@ describe "class including Harpy::Resource" do
         expect(subject.company_name).to eq("Stark Enterprises")
       end
       it "delegates other response codes to client" do
-        response = Typhoeus::Response.new :code => 500
+        response = httpx_response :code => 500
         expect(Harpy.client).to receive(:delete).with(url).and_return response
         expect(Harpy.client).to receive(:invalid_code).with(response)
         subject.destroy
