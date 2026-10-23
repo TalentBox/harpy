@@ -2,7 +2,6 @@ Harpy
 ======
 
 [![Test](https://github.com/TalentBox/harpy/actions/workflows/test.yml/badge.svg)](https://github.com/TalentBox/harpy/actions/workflows/test.yml)
-[![Code Climate](https://codeclimate.com/github/TalentBox/harpy.png)](https://codeclimate.com/github/TalentBox/harpy)
 
 Client for REST API with HATEOAS
 
